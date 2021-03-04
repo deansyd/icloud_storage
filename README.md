@@ -1,6 +1,6 @@
 # icloud_storage
 
-A flutter plugin for uploading and downloading files to and from iCloud.
+A flutter plugin for uploading and downloading files to and from iCloud...
 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?hosted_button_id=BH6WBSGWN594U)
 

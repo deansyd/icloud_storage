@@ -11,6 +11,11 @@ class ICloudStorage {
   static const EventChannel _listEventChannel =
       const EventChannel('icloud_storage/event/list');
 
+  /// Get an instance of the ICloudStorage class
+  ///
+  /// [containerId] is the iCloud Container ID created in the apple developer account
+  ///
+  /// Returns an instance of the ICloudStorage class
   static Future<ICloudStorage> getInstance(String containerId) async {
     await _channel.invokeMethod('initialize', {
       'containerId': containerId,
@@ -18,11 +23,18 @@ class ICloudStorage {
     return _instance;
   }
 
+  /// Lists files from the iCloud container directory, which lives on the device
+  ///
+  /// Returns a list of file names
   Future<List<String>> listFiles() async {
     return await _channel
         .invokeListMethod<String>('listFiles', {'watchUpdate': false});
   }
 
+  /// Lists files from the iCloud container directory, which lives on the
+  /// device. Also watches for updates.
+  ///
+  /// Returns a stream of lists of the file names
   Future<Stream<List<String>>> watchFiles() async {
     await _channel.invokeMethod('listFiles', {'watchUpdate': true});
     return _listEventChannel
@@ -32,6 +44,18 @@ class ICloudStorage {
             (event) => (event as List).map((item) => item as String).toList());
   }
 
+  /// Start to upload a file from a local path to iCloud
+  ///
+  /// [filePath] is the full path of the local file
+  ///
+  /// [destinationFileName] is the name of the file you want to store in iCloud.
+  /// If not specified, the name of the local file is used.
+  ///
+  /// [onProgress] is an optional callback to to track the progress of the
+  /// upload. It takes a Stream<double> as input, which is the percentage of
+  /// the data being uploaded.
+  ///
+  /// It does not wait for the file to finish upload to return void
   Future<void> startUpload({
     @required String filePath,
     String destinationFileName,
@@ -59,6 +83,18 @@ class ICloudStorage {
     }
   }
 
+  /// Start to download a file from iCloud
+  ///
+  /// [fileName] is the name of the file on iCloud
+  ///
+  /// [destinationFilePath] is the full path of the local file you want the
+  /// iCloud file to be saved as
+  ///
+  /// [onProgress] is an optional callback to to track the progress of the
+  /// download. It takes a Stream<double> as input, which is the percentage of
+  /// the data being downloaded.
+  ///
+  /// It does not wait for the file to finish download to return void
   Future<void> startDownload({
     @required String fileName,
     @required String destinationFilePath,
@@ -91,6 +127,8 @@ class ICloudStorage {
   }
 }
 
+/// An exception class used for development. It's ued when invalid argument
+/// is passed to the API
 class InvalidArgumentException implements Exception {
   final _message;
   InvalidArgumentException(this._message);
@@ -98,6 +136,7 @@ class InvalidArgumentException implements Exception {
   String toString() => "InvalidArgumentException: $_message";
 }
 
+/// A class contains the error code from PlatformException
 class PlatformExceptionCode {
   static const String iCloudConnectionOrPermission = 'E_CTR';
   static const String nativeCodeError = 'E_NAT';

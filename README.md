@@ -1,8 +1,9 @@
 # icloud_storage
 
-A flutter plugin for uploading and downloading files to and from iCloud.
-
+[![Pub](https://img.shields.io/pub/v/icloud_storage.svg)](https://pub.dev/packages/icloud_storage)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?hosted_button_id=BH6WBSGWN594U)
+
+A flutter plugin for uploading and downloading files to and from iCloud.
 
 ## Introduction
 
@@ -17,7 +18,7 @@ The following setups are needed in order to use this plugin:
 3. Enabled iCloud capability and assigned iCloud Container ID for the App ID
 4. Enabled iCloud capability in Xcode
 
-Refer to the 'How to set up iCloud Container and enable the capability' section for more detailed instructions.
+Refer to the [How to set up iCloud Container and enable the capability](#how-to-set-up-icloud-container-and-enable-the-capability) section for more detailed instructions.
 
 ## API Usage
 
@@ -67,7 +68,7 @@ await iCloudStorage.startUpload(
 
 Note: The 'startUpload' API is only to start the upload process. The upload may not be completed when the future returns. Use 'onProgress' to track the upload progress.
 
-### Download afile from iCloud
+### Download a file from iCloud
 
 ```dart
 await iCloudStorage.startDownload(

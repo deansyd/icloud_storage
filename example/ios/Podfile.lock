@@ -1,0 +1,22 @@
+PODS:
+  - Flutter (1.0.0)
+  - icloud_storage (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - icloud_storage (from `.symlinks/plugins/icloud_storage/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  icloud_storage:
+    :path: ".symlinks/plugins/icloud_storage/ios"
+
+SPEC CHECKSUMS:
+  Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
+  icloud_storage: b12a6ab3ae196b4104f1e7a6fe0c4f05ac1dc1ee
+
+PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
+
+COCOAPODS: 1.9.3

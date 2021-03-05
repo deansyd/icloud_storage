@@ -28,6 +28,8 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
       upload(call, result)
     case "download":
       download(call, result)
+    case "delete":
+      delete(call, result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -64,8 +66,9 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
     query.searchScopes = [NSMetadataQueryUbiquitousDataScope]
     query.predicate = NSPredicate(format: "%K beginswith %@", NSMetadataItemPathKey, containerURL.path)
     addListFilesObservers(query: query, containerURL: containerURL, watchUpdate: watchUpdate, result: result)
-    query.start()
+    
     if watchUpdate { result(nil) }
+    query.start()
   }
   
   private func addListFilesObservers(query: NSMetadataQuery, containerURL: URL, watchUpdate: Bool, result: @escaping FlutterResult) {
@@ -132,7 +135,7 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
         try FileManager.default.removeItem(at: cloudFileURL)
       }
       try FileManager.default.copyItem(at: localFileURL, to: cloudFileURL)
-      result(nil)
+      if !watchUpdate { result(nil) }
     } catch {
       result(nativeCodeError(error))
     }
@@ -151,6 +154,8 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
       }
       uploadEventChannel.setStreamHandler(uploadStreamHandler)
       addUploadObservers(query: query, streamHandler: uploadStreamHandler)
+      
+      result(nil)
       query.start()
     }
   }
@@ -209,7 +214,7 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
     let cloudFileURL = containerURL.appendingPathComponent(cloudFileName)
     do {
       try FileManager.default.startDownloadingUbiquitousItem(at: cloudFileURL)
-      result(nil)
+      if !watchUpdate { result(nil) }
     } catch {
       result(nativeCodeError(error))
     }
@@ -230,6 +235,8 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
       
       let localFileURL = URL(fileURLWithPath: localFilePath)
       addDownloadObservers(query: query, cloudFileURL: cloudFileURL, localFileURL: localFileURL, streamHandler: dwonloadStreamHandler)
+      
+      result(nil)
       query.start()
     }
   }
@@ -272,6 +279,32 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
       } catch {
         streamHandler.setEvent(nativeCodeError(error))
       }
+    }
+  }
+  
+  private func delete(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+    guard let args = call.arguments as? Dictionary<String, Any>,
+          let cloudFileName = args["cloudFileName"] as? String
+    else {
+      result(argumentError)
+      return
+    }
+    
+    guard let containerURL = FileManager.default.url(forUbiquityContainerIdentifier: containerId)
+    else {
+      result(containerError)
+      return
+    }
+    DebugHelper.log("containerURL: \(containerURL.path)")
+    
+    let cloudFileURL = containerURL.appendingPathComponent(cloudFileName)
+    do {
+      if FileManager.default.fileExists(atPath: cloudFileURL.path) {
+        try FileManager.default.removeItem(at: cloudFileURL)
+      }
+      result(nil)
+    } catch {
+      result(nativeCodeError(error))
     }
   }
   

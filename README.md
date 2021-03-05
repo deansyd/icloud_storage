@@ -56,7 +56,7 @@ await iCloudStorage.startUpload(
   filePath: 'someDirectory/someFile',
   destinationFileName: 'icloud_file',
   onProgress: (stream) {
-    uploadProgressSubcription = stream.listen(
+    stream.listen(
       (progress) => print('--- Upload File --- progress: $progress'),
       onDone: () => print('--- Upload File --- done'),
       onError: (err) => print('--- Upload File --- error: $err'),
@@ -66,7 +66,7 @@ await iCloudStorage.startUpload(
 );
 ```
 
-Note: The 'startUpload' API is only to start the upload process. The upload may not be completed when the future returns. Use 'onProgress' to track the upload progress.
+Note: The 'startUpload' API is only to start the upload process. The upload may not be completed when the future completes. Use 'onProgress' to track the upload progress.
 
 ### Download a file from iCloud
 
@@ -75,7 +75,7 @@ await iCloudStorage.startDownload(
   fileName: 'icloud_file',
   destinationFilePath: 'someDirectory/someFile',
   onProgress: (stream) {
-    downloadProgressSubcription = stream.listen(
+    stream.listen(
       (progress) => print('--- Download File --- progress: $progress'),
       onDone: () => print('--- Download File --- done'),
       onError: (err) => print('--- Download File --- error: $err'),
@@ -85,16 +85,25 @@ await iCloudStorage.startDownload(
 );
 ```
 
-Note: The 'startDownload' API is only to start the download process. The download may not be completed when the future returns. Use 'onProgress' to track the download progress.
+Note: The 'startDownload' API is only to start the download process. The download may not be completed when the future completes. Use 'onProgress' to track the download progress.
+
+### Delete a file from iCloud
+
+```dart
+await iCloudStorage.delete('icloud_file');
+```
 
 ### Error handling
 
 ```dart
 catch (err) {
-  if (err is PlatformException &&
-      err.code == PlatformExceptionCode.iCloudConnectionOrPermission) {
-    print(
-        'Error: iCloud container ID is not valid, or user is not signed in for iCloud, or user denied iCloud permission for this app');
+  if (err is PlatformException) {
+    if (err.code == PlatformExceptionCode.iCloudConnectionOrPermission) {
+      print(
+          'Platform Exception: iCloud container ID is not valid, or user is not signed in for iCloud, or user denied iCloud permission for this app');
+    } else {
+      print('Platform Exception: ${err.message}; Details: ${err.details}');
+    }
   } else {
     print(err.toString());
   }

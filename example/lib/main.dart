@@ -11,10 +11,13 @@ class MyApp extends StatelessWidget {
   static const iCloudContainerId = '{your icloud container id}';
 
   void handleError(dynamic err) {
-    if (err is PlatformException &&
-        err.code == PlatformExceptionCode.iCloudConnectionOrPermission) {
-      print(
-          'Error: iCloud container ID is not valid, or user is not signed in for iCloud, or user denied iCloud permission for this app');
+    if (err is PlatformException) {
+      if (err.code == PlatformExceptionCode.iCloudConnectionOrPermission) {
+        print(
+            'Platform Exception: iCloud container ID is not valid, or user is not signed in for iCloud, or user denied iCloud permission for this app');
+      } else {
+        print('Platform Exception: ${err.message}; Details: ${err.details}');
+      }
     } else {
       print(err.toString());
     }
@@ -113,6 +116,15 @@ class MyApp extends StatelessWidget {
     }
   }
 
+  Future<void> testDeleteFile() async {
+    try {
+      final iCloudStorage = await ICloudStorage.getInstance(iCloudContainerId);
+      await iCloudStorage.delete('test_icloud_file');
+    } catch (err) {
+      handleError(err);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -138,6 +150,10 @@ class MyApp extends StatelessWidget {
               FlatButton(
                 child: Text('Start Download'),
                 onPressed: testDownloadFile,
+              ),
+              FlatButton(
+                child: Text('Delete File'),
+                onPressed: testDeleteFile,
               ),
             ],
           ),

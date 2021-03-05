@@ -2,8 +2,11 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+/// A function-type alias takes a stream as argument and returns void
 typedef StreamHandler<T> = void Function(Stream<T>);
 
+/// The main class for the plugin. Contains all the API's needed for listing,
+/// uploading, downloading and deleting files.
 class ICloudStorage {
   ICloudStorage._();
   static final ICloudStorage _instance = ICloudStorage._();
@@ -13,9 +16,10 @@ class ICloudStorage {
 
   /// Get an instance of the ICloudStorage class
   ///
-  /// [containerId] is the iCloud Container ID created in the apple developer account
+  /// [containerId] is the iCloud Container ID created in the apple developer
+  /// account
   ///
-  /// Returns an instance of the ICloudStorage class
+  /// Returns a future completing with an instance of the ICloudStorage class
   static Future<ICloudStorage> getInstance(String containerId) async {
     await _channel.invokeMethod('initialize', {
       'containerId': containerId,
@@ -25,7 +29,7 @@ class ICloudStorage {
 
   /// Lists files from the iCloud container directory, which lives on the device
   ///
-  /// Returns a list of file names
+  /// Returns a future completing with a list of file names
   Future<List<String>> listFiles() async {
     return await _channel
         .invokeListMethod<String>('listFiles', {'watchUpdate': false});
@@ -34,7 +38,7 @@ class ICloudStorage {
   /// Lists files from the iCloud container directory, which lives on the
   /// device. Also watches for updates.
   ///
-  /// Returns a stream of lists of the file names
+  /// Returns a future completing with a stream of lists of the file names
   Future<Stream<List<String>>> watchFiles() async {
     await _channel.invokeMethod('listFiles', {'watchUpdate': true});
     return _listEventChannel
@@ -55,7 +59,8 @@ class ICloudStorage {
   /// upload. It takes a Stream<double> as input, which is the percentage of
   /// the data being uploaded.
   ///
-  /// It does not wait for the file to finish upload to return void
+  /// The returned future completes without waiting for the file to be uploaded
+  /// to iCloud
   Future<void> startUpload({
     @required String filePath,
     String destinationFileName,
@@ -94,7 +99,8 @@ class ICloudStorage {
   /// download. It takes a Stream<double> as input, which is the percentage of
   /// the data being downloaded.
   ///
-  /// It does not wait for the file to finish download to return void
+  /// The returned future completes without waiting for the file to be
+  /// downloaded
   Future<void> startDownload({
     @required String fileName,
     @required String destinationFilePath,
@@ -125,12 +131,28 @@ class ICloudStorage {
       onProgress(stream);
     }
   }
+
+  /// Delete a file from iCloud container directory, which lives on the device
+  ///
+  /// [fileName] is the name of the file on iCloud
+  ///
+  /// The returned future completes without waiting for the file to be deleted
+  /// on iCloud
+  Future<void> delete(String fileName) async {
+    if (fileName == null || fileName.trim().isEmpty || fileName.contains('/')) {
+      throw InvalidArgumentException('invalid fileName');
+    }
+
+    await _channel.invokeMethod('delete', {'cloudFileName': fileName});
+  }
 }
 
 /// An exception class used for development. It's ued when invalid argument
 /// is passed to the API
 class InvalidArgumentException implements Exception {
   final _message;
+
+  /// Constructor takes the exception message as an argument
   InvalidArgumentException(this._message);
 
   String toString() => "InvalidArgumentException: $_message";
@@ -138,6 +160,10 @@ class InvalidArgumentException implements Exception {
 
 /// A class contains the error code from PlatformException
 class PlatformExceptionCode {
+  /// The code indicates iCloud container ID is not valid, or user is not signed
+  /// in to iCloud, or user denied iCloud permission for this app
   static const String iCloudConnectionOrPermission = 'E_CTR';
+
+  /// The code indicates other error from native code
   static const String nativeCodeError = 'E_NAT';
 }

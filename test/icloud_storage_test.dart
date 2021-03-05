@@ -106,4 +106,12 @@ void main() {
             ),
         throwsException);
   });
+
+  test('delete', () async {
+    final iCloudStorage = await ICloudStorage.getInstance('containerId');
+    await iCloudStorage.delete('file');
+    expect(_methodCall.arguments, {'cloudFileName': 'file'});
+
+    expect(() async => await iCloudStorage.delete('dir/file'), throwsException);
+  });
 }

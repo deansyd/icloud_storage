@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 
 /// A function-type alias takes a stream as argument and returns void
 typedef StreamHandler<T> = void Function(Stream<T>);
@@ -31,8 +30,8 @@ class ICloudStorage {
   ///
   /// Returns a future completing with a list of file names
   Future<List<String>> listFiles() async {
-    return await _channel
-        .invokeListMethod<String>('listFiles', {'watchUpdate': false});
+    return await (_channel.invokeListMethod<String>(
+        'listFiles', {'watchUpdate': false}) as FutureOr<List<String>>);
   }
 
   /// Lists files from the iCloud container directory, which lives on the
@@ -62,11 +61,11 @@ class ICloudStorage {
   /// The returned future completes without waiting for the file to be uploaded
   /// to iCloud
   Future<void> startUpload({
-    @required String filePath,
-    String destinationFileName,
-    StreamHandler<double> onProgress,
+    required String filePath,
+    String? destinationFileName,
+    StreamHandler<double>? onProgress,
   }) async {
-    if (filePath == null || filePath.trim().isEmpty) {
+    if (filePath.trim().isEmpty) {
       throw InvalidArgumentException('invalid filePath');
     }
 
@@ -102,15 +101,14 @@ class ICloudStorage {
   /// The returned future completes without waiting for the file to be
   /// downloaded
   Future<void> startDownload({
-    @required String fileName,
-    @required String destinationFilePath,
-    StreamHandler<double> onProgress,
+    required String fileName,
+    required String destinationFilePath,
+    StreamHandler<double>? onProgress,
   }) async {
-    if (fileName == null || fileName.trim().isEmpty || fileName.contains('/')) {
+    if (fileName.trim().isEmpty || fileName.contains('/')) {
       throw InvalidArgumentException('invalid fileName');
     }
-    if (destinationFilePath == null ||
-        destinationFilePath.trim().isEmpty ||
+    if (destinationFilePath.trim().isEmpty ||
         destinationFilePath[destinationFilePath.length - 1] == '/') {
       throw InvalidArgumentException('invalid destinationFilePath');
     }
@@ -139,7 +137,7 @@ class ICloudStorage {
   /// The returned future completes without waiting for the file to be deleted
   /// on iCloud
   Future<void> delete(String fileName) async {
-    if (fileName == null || fileName.trim().isEmpty || fileName.contains('/')) {
+    if (fileName.trim().isEmpty || fileName.contains('/')) {
       throw InvalidArgumentException('invalid fileName');
     }
 

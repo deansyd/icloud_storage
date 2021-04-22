@@ -7,7 +7,7 @@ void main() {
 
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  MethodCall _methodCall;
+  late MethodCall _methodCall;
 
   setUp(() {
     channel.setMockMethodCallHandler((MethodCall methodCall) async {

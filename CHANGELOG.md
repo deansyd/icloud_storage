@@ -1,3 +1,7 @@
+## 0.2.0
+
+- Release for null safety.
+
 ## 0.1.0
 
 - Added a new API for file deletion.

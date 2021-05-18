@@ -1,3 +1,8 @@
+## 0.2.1
+
+- Bug fix: startUpload/startDownload progress stream synchronisation issue
+- Bug fix: startDownload not moving file to destination if onProgress is null
+
 ## 0.2.0
 
 - Release for null safety.

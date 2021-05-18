@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/services.dart';
 
 /// A function-type alias takes a stream as argument and returns void
@@ -10,8 +11,6 @@ class ICloudStorage {
   ICloudStorage._();
   static final ICloudStorage _instance = ICloudStorage._();
   static const MethodChannel _channel = const MethodChannel('icloud_storage');
-  static const EventChannel _listEventChannel =
-      const EventChannel('icloud_storage/event/list');
 
   /// Get an instance of the ICloudStorage class
   ///
@@ -31,7 +30,7 @@ class ICloudStorage {
   /// Returns a future completing with a list of file names
   Future<List<String>> listFiles() async {
     return await (_channel.invokeListMethod<String>(
-        'listFiles', {'watchUpdate': false}) as FutureOr<List<String>>);
+        'listFiles', {'eventChannelName': ''}) as FutureOr<List<String>>);
   }
 
   /// Lists files from the iCloud container directory, which lives on the
@@ -39,8 +38,12 @@ class ICloudStorage {
   ///
   /// Returns a future completing with a stream of lists of the file names
   Future<Stream<List<String>>> watchFiles() async {
-    await _channel.invokeMethod('listFiles', {'watchUpdate': true});
-    return _listEventChannel
+    final eventChannelName = 'icloud_storage/event/list';
+    await _channel.invokeMethod(
+        'createEventChannel', {'eventChannelName': eventChannelName});
+    final watchFileEventChannel = EventChannel(eventChannelName);
+    _channel.invokeMethod('listFiles', {'eventChannelName': eventChannelName});
+    return watchFileEventChannel
         .receiveBroadcastStream()
         .where((event) => event is List)
         .map<List<String>>(
@@ -70,21 +73,26 @@ class ICloudStorage {
     }
 
     final cloudFileName = destinationFileName ?? filePath.split('/').last;
-    await _channel.invokeMethod('upload', {
-      'localFilePath': filePath,
-      'cloudFileName': cloudFileName,
-      'watchUpdate': onProgress != null
-    });
+    var eventChannelName = '';
 
     if (onProgress != null) {
-      final uploadEventChannel =
-          EventChannel('icloud_storage/event/upload/$cloudFileName');
+      eventChannelName =
+          'icloud_storage/event/upload/$cloudFileName${_getChannelNameSuffix()}';
+      await _channel.invokeMethod(
+          'createEventChannel', {'eventChannelName': eventChannelName});
+      final uploadEventChannel = EventChannel(eventChannelName);
       final stream = uploadEventChannel
           .receiveBroadcastStream()
           .where((event) => event is double)
           .map((event) => event as double);
       onProgress(stream);
     }
+
+    await _channel.invokeMethod('upload', {
+      'localFilePath': filePath,
+      'cloudFileName': cloudFileName,
+      'eventChannelName': eventChannelName
+    });
   }
 
   /// Start to download a file from iCloud
@@ -113,21 +121,26 @@ class ICloudStorage {
       throw InvalidArgumentException('invalid destinationFilePath');
     }
 
-    await _channel.invokeMethod('download', {
-      'cloudFileName': fileName,
-      'localFilePath': destinationFilePath,
-      'watchUpdate': onProgress != null
-    });
+    var eventChannelName = '';
 
     if (onProgress != null) {
-      final downloadEventChannel =
-          EventChannel('icloud_storage/event/download/$fileName');
+      eventChannelName =
+          'icloud_storage/event/download/$fileName${_getChannelNameSuffix()}';
+      await _channel.invokeMethod(
+          'createEventChannel', {'eventChannelName': eventChannelName});
+      final downloadEventChannel = EventChannel(eventChannelName);
       final stream = downloadEventChannel
           .receiveBroadcastStream()
           .where((event) => event is double)
           .map((event) => event as double);
       onProgress(stream);
     }
+
+    await _channel.invokeMethod('download', {
+      'cloudFileName': fileName,
+      'localFilePath': destinationFilePath,
+      'eventChannelName': eventChannelName
+    });
   }
 
   /// Delete a file from iCloud container directory, which lives on the device
@@ -143,6 +156,9 @@ class ICloudStorage {
 
     await _channel.invokeMethod('delete', {'cloudFileName': fileName});
   }
+
+  String _getChannelNameSuffix() =>
+      '-${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(999)}';
 }
 
 /// An exception class used for development. It's ued when invalid argument

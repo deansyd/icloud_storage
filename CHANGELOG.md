@@ -1,3 +1,7 @@
+## 0.2.2
+
+- Bug fix: listFiles type cast issue
+
 ## 0.2.1
 
 - Bug fix: startUpload/startDownload progress stream synchronisation issue

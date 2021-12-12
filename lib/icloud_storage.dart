@@ -29,8 +29,9 @@ class ICloudStorage {
   ///
   /// Returns a future completing with a list of file names
   Future<List<String>> listFiles() async {
-    return await (_channel.invokeListMethod<String>(
-        'listFiles', {'eventChannelName': ''}) as FutureOr<List<String>>);
+    final files = await _channel
+        .invokeListMethod<String>('listFiles', {'eventChannelName': ''});
+    return files ?? [];
   }
 
   /// Lists files from the iCloud container directory, which lives on the

@@ -181,9 +181,7 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
     guard let fileItem = query.results.first as? NSMetadataItem else { return }
     guard let fileURL = fileItem.value(forAttribute: NSMetadataItemURLKey) as? URL else { return }
     guard let fileURLValues = try? fileURL.resourceValues(forKeys: [.ubiquitousItemIsUploadingKey]) else { return}
-    guard let isUploading = fileURLValues.ubiquitousItemIsUploading else { return }
-    
-    let streamHandler = self.streamHandlers[eventChannelName]!
+    guard let streamHandler = self.streamHandlers[eventChannelName] else { return }
     
     if let error = fileURLValues.ubiquitousItemUploadingError {
       streamHandler.setEvent(nativeCodeError(error))
@@ -192,11 +190,10 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
     
     if let progress = fileItem.value(forAttribute: NSMetadataUbiquitousItemPercentUploadedKey) as? Double {
       streamHandler.setEvent(progress)
-    }
-    
-    if !isUploading {
-      streamHandler.setEvent(FlutterEndOfEventStream)
-      removeStreamHandler(eventChannelName)
+      if (progress >= 100) {
+        streamHandler.setEvent(FlutterEndOfEventStream)
+        removeStreamHandler(eventChannelName)
+      }
     }
   }
   
@@ -309,14 +306,21 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
     }
     DebugHelper.log("containerURL: \(containerURL.path)")
     
-    let cloudFileURL = containerURL.appendingPathComponent(cloudFileName)
-    do {
-      if FileManager.default.fileExists(atPath: cloudFileURL.path) {
-        try FileManager.default.removeItem(at: cloudFileURL)
+    let fileURL = containerURL.appendingPathComponent(cloudFileName)
+    let fileCoordinator = NSFileCoordinator(filePresenter: nil)
+    fileCoordinator.coordinate(writingItemAt: fileURL, options: NSFileCoordinator.WritingOptions.forDeleting, error: nil) {
+      writingURL in
+      do {
+        if !FileManager.default.fileExists(atPath: writingURL.path) {
+          result(fileNotFoundError)
+          return
+        }
+        try FileManager.default.removeItem(at: writingURL)
+        result(nil)
+      } catch {
+        DebugHelper.log("error: \(error.localizedDescription)")
+        result(nativeCodeError(error))
       }
-      result(nil)
-    } catch {
-      result(nativeCodeError(error))
     }
   }
   
@@ -349,6 +353,7 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
   
   let argumentError = FlutterError(code: "E_ARG", message: "Invalid Arguments", details: nil)
   let containerError = FlutterError(code: "E_CTR", message: "Invalid containerId, or user is not signed in, or user disabled iCould permission", details: nil)
+  let fileNotFoundError = FlutterError(code: "E_FNF", message: "The file does not exist", details: nil)
   
   private func nativeCodeError(_ error: Error) -> FlutterError {
     return FlutterError(code: "E_NAT", message: "Native Code Error", details: "\(error)")

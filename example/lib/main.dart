@@ -15,6 +15,8 @@ class MyApp extends StatelessWidget {
       if (err.code == PlatformExceptionCode.iCloudConnectionOrPermission) {
         print(
             'Platform Exception: iCloud container ID is not valid, or user is not signed in for iCloud, or user denied iCloud permission for this app');
+      } else if (err.code == PlatformExceptionCode.fileNotFound) {
+        print('File not found');
       } else {
         print('Platform Exception: ${err.message}; Details: ${err.details}');
       }
@@ -23,7 +25,7 @@ class MyApp extends StatelessWidget {
     }
   }
 
-  Future<void> testListFile() async {
+  Future<void> listFile() async {
     try {
       final iCloudStorage = await ICloudStorage.getInstance(iCloudContainerId);
       final files = await iCloudStorage.listFiles();
@@ -33,7 +35,7 @@ class MyApp extends StatelessWidget {
     }
   }
 
-  Future<void> testWatchFile() async {
+  Future<void> watchFile() async {
     try {
       final iCloudStorage = await ICloudStorage.getInstance(iCloudContainerId);
       final fileListStream = await iCloudStorage.watchFiles();
@@ -50,7 +52,7 @@ class MyApp extends StatelessWidget {
     }
   }
 
-  Future<void> testUploadFile() async {
+  Future<void> uploadFile() async {
     try {
       final iCloudStorage = await ICloudStorage.getInstance(iCloudContainerId);
       StreamSubscription<double> uploadProgressSubcription;
@@ -83,7 +85,7 @@ class MyApp extends StatelessWidget {
     }
   }
 
-  Future<void> testDownloadFile() async {
+  Future<void> downloadFile() async {
     try {
       final iCloudStorage = await ICloudStorage.getInstance(iCloudContainerId);
       StreamSubscription<double> downloadProgressSubcription;
@@ -116,7 +118,7 @@ class MyApp extends StatelessWidget {
     }
   }
 
-  Future<void> testDeleteFile() async {
+  Future<void> deleteFile() async {
     try {
       final iCloudStorage = await ICloudStorage.getInstance(iCloudContainerId);
       await iCloudStorage.delete('test_icloud_file');
@@ -135,25 +137,25 @@ class MyApp extends StatelessWidget {
         body: Center(
           child: Column(
             children: [
-              FlatButton(
+              TextButton(
                 child: Text('List File'),
-                onPressed: testListFile,
+                onPressed: listFile,
               ),
-              FlatButton(
+              TextButton(
                 child: Text('Watch File'),
-                onPressed: testWatchFile,
+                onPressed: watchFile,
               ),
-              FlatButton(
+              TextButton(
                 child: Text('Start Upload'),
-                onPressed: testUploadFile,
+                onPressed: uploadFile,
               ),
-              FlatButton(
+              TextButton(
                 child: Text('Start Download'),
-                onPressed: testDownloadFile,
+                onPressed: downloadFile,
               ),
-              FlatButton(
+              TextButton(
                 child: Text('Delete File'),
-                onPressed: testDeleteFile,
+                onPressed: deleteFile,
               ),
             ],
           ),

@@ -144,12 +144,11 @@ class ICloudStorage {
     });
   }
 
-  /// Delete a file from iCloud container directory, which lives on the device
+  /// Delete a file from iCloud container directory, whether it is been downloaded or not
   ///
   /// [fileName] is the name of the file on iCloud
   ///
-  /// The returned future completes without waiting for the file to be deleted
-  /// on iCloud
+  /// PlatformException with code PlatformExceptionCode.fileNotFound will be thrown if the file does not exist
   Future<void> delete(String fileName) async {
     if (fileName.trim().isEmpty || fileName.contains('/')) {
       throw InvalidArgumentException('invalid fileName');
@@ -178,6 +177,9 @@ class PlatformExceptionCode {
   /// The code indicates iCloud container ID is not valid, or user is not signed
   /// in to iCloud, or user denied iCloud permission for this app
   static const String iCloudConnectionOrPermission = 'E_CTR';
+
+  /// The code indicates file not found
+  static const String fileNotFound = 'E_FNF';
 
   /// The code indicates other error from native code
   static const String nativeCodeError = 'E_NAT';

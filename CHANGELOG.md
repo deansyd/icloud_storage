@@ -1,3 +1,8 @@
+## 0.2.3
+
+- Bug fix: delete didn't work if the file hadn't been downloaded https://github.com/deansyd/icloud_storage/issues/11
+- Bug fix: startUpload https://github.com/deansyd/icloud_storage/issues/12
+
 ## 0.2.2
 
 - Bug fix: listFiles type cast issue

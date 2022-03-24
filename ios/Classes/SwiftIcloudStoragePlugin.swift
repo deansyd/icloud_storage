@@ -8,7 +8,7 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
   var streamHandlers: [String: StreamHandler] = [:]
   
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let messenger = registrar.messenger();
+    let messenger = registrar.messenger()
     let channel = FlutterMethodChannel(name: "icloud_storage", binaryMessenger: messenger)
     let instance = SwiftIcloudStoragePlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
@@ -19,6 +19,8 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
     switch call.method {
     case "initialize":
       initialize(call, result)
+    case "gatherFiles":
+      gatherFiles(call, result)
     case "listFiles":
       listFiles(call, result)
     case "upload":
@@ -27,6 +29,8 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
       download(call, result)
     case "delete":
       delete(call, result)
+    case "move":
+      move(call, result)
     case "createEventChannel":
       createEventChannel(call, result)
     default:
@@ -36,15 +40,90 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
   
   private func initialize(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
     guard let args = call.arguments as? Dictionary<String, Any>,
-          let contaierId = args["containerId"] as? String
+          let containerId = args["containerId"] as? String
     else {
       result(argumentError)
       return
     }
-    self.containerId = contaierId
+    self.containerId = containerId
     result(nil)
   }
   
+  private func gatherFiles(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+    guard let args = call.arguments as? Dictionary<String, Any>,
+          let eventChannelName = args["eventChannelName"] as? String
+    else {
+      result(argumentError)
+      return
+    }
+    
+    guard let containerURL = FileManager.default.url(forUbiquityContainerIdentifier: containerId)
+    else {
+      result(containerError)
+      return
+    }
+    DebugHelper.log("containerURL: \(containerURL.path)")
+    
+    let query = NSMetadataQuery.init()
+    query.operationQueue = .main
+    query.searchScopes = [NSMetadataQueryUbiquitousDataScope]
+    query.predicate = NSPredicate(format: "%K beginswith %@", NSMetadataItemPathKey, containerURL.path)
+    addGatherFilesObservers(query: query, containerURL: containerURL, eventChannelName: eventChannelName, result: result)
+    
+    if !eventChannelName.isEmpty {
+      let streamHandler = self.streamHandlers[eventChannelName]!
+      streamHandler.onCancelHandler = { [self] in
+        removeObservers(query)
+        query.stop()
+        removeStreamHandler(eventChannelName)
+      }
+    }
+    query.start()
+  }
+  
+  private func addGatherFilesObservers(query: NSMetadataQuery, containerURL: URL, eventChannelName: String, result: @escaping FlutterResult) {
+    NotificationCenter.default.addObserver(forName: NSNotification.Name.NSMetadataQueryDidFinishGathering, object: query, queue: query.operationQueue) {
+      [self] (notification) in
+        let files = mapFileAttributesFromQuery(query: query, containerURL: containerURL)
+        removeObservers(query, watchUpdate: false)
+        if eventChannelName.isEmpty { query.stop() }
+        result(files)
+    }
+    
+    if !eventChannelName.isEmpty {
+      NotificationCenter.default.addObserver(forName: NSNotification.Name.NSMetadataQueryDidUpdate, object: query, queue: query.operationQueue) {
+        [self] (notification) in
+        let files = mapFileAttributesFromQuery(query: query, containerURL: containerURL)
+        let streamHandler = self.streamHandlers[eventChannelName]!
+        streamHandler.setEvent(files)
+      }
+    }
+  }
+  
+  private func mapFileAttributesFromQuery(query: NSMetadataQuery, containerURL: URL) -> [[String: Any?]] {
+    var fileMaps: [[String: Any?]] = []
+    for item in query.results {
+      guard let fileItem = item as? NSMetadataItem else { continue }
+      guard let fileURL = fileItem.value(forAttribute: NSMetadataItemURLKey) as? URL else { continue }
+      if fileURL.absoluteString.last == "/" { continue }
+
+      let map: [String: Any?] = [
+        "relativePath": String(fileURL.absoluteString.dropFirst(containerURL.absoluteString.count)),
+        "sizeInBytes": fileItem.value(forAttribute: NSMetadataItemFSSizeKey),
+        "creationDate": (fileItem.value(forAttribute: NSMetadataItemFSCreationDateKey) as? Date)?.timeIntervalSince1970,
+        "contentChangeDate": (fileItem.value(forAttribute: NSMetadataItemFSContentChangeDateKey) as? Date)?.timeIntervalSince1970,
+        "hasUnresolvedConflicts": fileItem.value(forAttribute: NSMetadataUbiquitousItemHasUnresolvedConflictsKey),
+        "downloadStatus": fileItem.value(forAttribute: NSMetadataUbiquitousItemDownloadingStatusKey),
+        "isDownloading": fileItem.value(forAttribute: NSMetadataUbiquitousItemIsDownloadingKey),
+        "isUploaded": fileItem.value(forAttribute: NSMetadataUbiquitousItemIsUploadedKey),
+        "isUploading": fileItem.value(forAttribute: NSMetadataUbiquitousItemIsUploadingKey),
+      ]
+      fileMaps.append(map)
+    }
+    return fileMaps
+  }
+
+  @available(*, deprecated)
   private func listFiles(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
     guard let args = call.arguments as? Dictionary<String, Any>,
           let eventChannelName = args["eventChannelName"] as? String
@@ -78,6 +157,7 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
     query.start()
   }
   
+  @available(*, deprecated)
   private func addListFilesObservers(query: NSMetadataQuery, containerURL: URL, eventChannelName: String, result: @escaping FlutterResult) {
     NotificationCenter.default.addObserver(forName: NSNotification.Name.NSMetadataQueryDidFinishGathering, object: query, queue: query.operationQueue) {
       [self] (notification) in
@@ -91,7 +171,8 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
       }
     }
   }
-  
+
+  @available(*, deprecated)
   private func onListQueryNotification(query: NSMetadataQuery, containerURL: URL, eventChannelName: String, result: @escaping FlutterResult) {
     var filePaths: [String] = []
     for item in query.results {
@@ -132,11 +213,13 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
     let localFileURL = URL(fileURLWithPath: localFilePath)
     
     do {
-      if !FileManager.default.fileExists(atPath: containerURL.path) {
-        try FileManager.default.createDirectory(at: containerURL, withIntermediateDirectories: true, attributes: nil)
-      }
       if FileManager.default.fileExists(atPath: cloudFileURL.path) {
         try FileManager.default.removeItem(at: cloudFileURL)
+      } else {
+        let cloudFileDirURL = cloudFileURL.deletingLastPathComponent()
+        if !FileManager.default.fileExists(atPath: cloudFileDirURL.path) {
+          try FileManager.default.createDirectory(at: cloudFileDirURL, withIntermediateDirectories: true, attributes: nil)
+        }
       }
       try FileManager.default.copyItem(at: localFileURL, to: cloudFileURL)
     } catch {
@@ -311,11 +394,47 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
     fileCoordinator.coordinate(writingItemAt: fileURL, options: NSFileCoordinator.WritingOptions.forDeleting, error: nil) {
       writingURL in
       do {
-        if !FileManager.default.fileExists(atPath: writingURL.path) {
+        var isDir: ObjCBool = false
+        if !FileManager.default.fileExists(atPath: writingURL.path, isDirectory: &isDir) {
           result(fileNotFoundError)
           return
         }
         try FileManager.default.removeItem(at: writingURL)
+        result(nil)
+      } catch {
+        DebugHelper.log("error: \(error.localizedDescription)")
+        result(nativeCodeError(error))
+      }
+    }
+  }
+  
+  private func move(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+    guard let args = call.arguments as? Dictionary<String, Any>,
+          let atRelativePath = args["atRelativePath"] as? String,
+          let toRelativePath = args["toRelativePath"] as? String
+    else {
+      result(argumentError)
+      return
+    }
+    
+    guard let containerURL = FileManager.default.url(forUbiquityContainerIdentifier: containerId)
+    else {
+      result(containerError)
+      return
+    }
+    DebugHelper.log("containerURL: \(containerURL.path)")
+    
+    let atURL = containerURL.appendingPathComponent(atRelativePath)
+    let toURL = containerURL.appendingPathComponent(toRelativePath)
+    let fileCoordinator = NSFileCoordinator(filePresenter: nil)
+    fileCoordinator.coordinate(writingItemAt: atURL, options: NSFileCoordinator.WritingOptions.forMoving, writingItemAt: toURL, options: NSFileCoordinator.WritingOptions.forReplacing, error: nil) {
+      atWritingURL, toWritingURL in
+      do {
+        let toDirURL = toWritingURL.deletingLastPathComponent()
+        if !FileManager.default.fileExists(atPath: toDirURL.path) {
+          try FileManager.default.createDirectory(at: toDirURL, withIntermediateDirectories: true, attributes: nil)
+        }
+        try FileManager.default.moveItem(at: atWritingURL, to: toWritingURL)
         result(nil)
       } catch {
         DebugHelper.log("error: \(error.localizedDescription)")

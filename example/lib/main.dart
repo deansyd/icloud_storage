@@ -1,16 +1,120 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:async';
 import 'package:icloud_storage/icloud_storage.dart';
 
 void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   static const iCloudContainerId = '{your icloud container id}';
 
-  void handleError(dynamic err) {
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  StreamSubscription<List<ICloudFile>>? filesUpdateSub;
+  StreamSubscription<double>? uploadProgressSub;
+  StreamSubscription<double>? downloadProgressSub;
+
+  Future<void> gatherFiles() async {
+    try {
+      final iCloudStorage =
+          await ICloudStorage.getInstance(MyApp.iCloudContainerId);
+      final fileList = await iCloudStorage.gatherFiles(onUpdate: (stream) {
+        filesUpdateSub = stream.listen((updatedFileList) {
+          print('FILES UPDATED');
+          updatedFileList.forEach((file) => print('-- ${file.relativePath}'));
+        });
+      });
+      print('FILES GATHERED');
+      fileList.forEach((file) => print('-- ${file.relativePath}'));
+    } catch (err) {
+      _handleError(err);
+    }
+  }
+
+  Future<void> uploadFile() async {
+    try {
+      final iCloudStorage =
+          await ICloudStorage.getInstance(MyApp.iCloudContainerId);
+      await iCloudStorage.startUpload(
+        filePath: '/localDir/localFile',
+        destinationRelativePath: 'destDir/destFile',
+        onProgress: (stream) {
+          uploadProgressSub = stream.listen(
+            (progress) => print('Upload File Progress: $progress'),
+            onDone: () => print('Upload File Done'),
+            onError: (err) => print('Upload File Error: $err'),
+            cancelOnError: true,
+          );
+        },
+      );
+    } catch (err) {
+      _handleError(err);
+    }
+  }
+
+  Future<void> downloadFile() async {
+    try {
+      final iCloudStorage =
+          await ICloudStorage.getInstance(MyApp.iCloudContainerId);
+      await iCloudStorage.startDownload(
+        relativePath: 'relativePath',
+        destinationFilePath: '/localDir/localFile',
+        onProgress: (stream) {
+          downloadProgressSub = stream.listen(
+            (progress) => print('Download File Progress: $progress'),
+            onDone: () => print('Download File Done'),
+            onError: (err) => print('Download File Error: $err'),
+            cancelOnError: true,
+          );
+        },
+      );
+    } catch (err) {
+      _handleError(err);
+    }
+  }
+
+  Future<void> renameFile() async {
+    try {
+      final iCloudStorage =
+          await ICloudStorage.getInstance(MyApp.iCloudContainerId);
+      await iCloudStorage.rename(
+        relativePath: 'relativePath',
+        newName: 'newName',
+      );
+    } catch (err) {
+      _handleError(err);
+    }
+  }
+
+  Future<void> moveFile() async {
+    try {
+      final iCloudStorage =
+          await ICloudStorage.getInstance(MyApp.iCloudContainerId);
+      await iCloudStorage.move(
+        fromRelativePath: 'dir/file',
+        toRelativePath: 'dir/subdir/file',
+      );
+    } catch (err) {
+      _handleError(err);
+    }
+  }
+
+  Future<void> deleteFile() async {
+    try {
+      final iCloudStorage =
+          await ICloudStorage.getInstance(MyApp.iCloudContainerId);
+      await iCloudStorage.delete('relativePath');
+    } catch (err) {
+      _handleError(err);
+    }
+  }
+
+  void _handleError(dynamic err) {
     if (err is PlatformException) {
       if (err.code == PlatformExceptionCode.iCloudConnectionOrPermission) {
         print(
@@ -25,108 +129,6 @@ class MyApp extends StatelessWidget {
     }
   }
 
-  Future<void> listFile() async {
-    try {
-      final iCloudStorage = await ICloudStorage.getInstance(iCloudContainerId);
-      final files = await iCloudStorage.listFiles();
-      files.forEach((file) => print('--- List Files --- file: $file'));
-    } catch (err) {
-      handleError(err);
-    }
-  }
-
-  Future<void> watchFile() async {
-    try {
-      final iCloudStorage = await ICloudStorage.getInstance(iCloudContainerId);
-      final fileListStream = await iCloudStorage.watchFiles();
-      final fileListSubscription = fileListStream.listen((files) {
-        files.forEach((file) => print('--- Watch Files --- file: $file'));
-      });
-
-      Future.delayed(Duration(seconds: 10), () {
-        fileListSubscription.cancel();
-        print('--- Watch Files --- canceled');
-      });
-    } catch (err) {
-      handleError(err);
-    }
-  }
-
-  Future<void> uploadFile() async {
-    try {
-      final iCloudStorage = await ICloudStorage.getInstance(iCloudContainerId);
-      StreamSubscription<double> uploadProgressSubcription;
-      var isUploadComplete = false;
-
-      await iCloudStorage.startUpload(
-        filePath: '{your local file}',
-        destinationFileName: 'test_icloud_file',
-        onProgress: (stream) {
-          uploadProgressSubcription = stream.listen(
-            (progress) => print('--- Upload File --- progress: $progress'),
-            onDone: () {
-              isUploadComplete = true;
-              print('--- Upload File --- done');
-            },
-            onError: (err) => print('--- Upload File --- error: $err'),
-            cancelOnError: true,
-          );
-        },
-      );
-
-      Future.delayed(Duration(seconds: 10), () {
-        if (!isUploadComplete) {
-          uploadProgressSubcription?.cancel();
-          print('--- Upload File --- timed out');
-        }
-      });
-    } catch (err) {
-      handleError(err);
-    }
-  }
-
-  Future<void> downloadFile() async {
-    try {
-      final iCloudStorage = await ICloudStorage.getInstance(iCloudContainerId);
-      StreamSubscription<double> downloadProgressSubcription;
-      var isDownloadComplete = false;
-
-      await iCloudStorage.startDownload(
-        fileName: 'test_icloud_file',
-        destinationFilePath: '{your destination file path}',
-        onProgress: (stream) {
-          downloadProgressSubcription = stream.listen(
-            (progress) => print('--- Download File --- progress: $progress'),
-            onDone: () {
-              isDownloadComplete = true;
-              print('--- Download File --- done');
-            },
-            onError: (err) => print('--- Download File --- error: $err'),
-            cancelOnError: true,
-          );
-        },
-      );
-
-      Future.delayed(Duration(seconds: 20), () {
-        if (!isDownloadComplete) {
-          downloadProgressSubcription?.cancel();
-          print('--- Download File --- timed out');
-        }
-      });
-    } catch (err) {
-      handleError(err);
-    }
-  }
-
-  Future<void> deleteFile() async {
-    try {
-      final iCloudStorage = await ICloudStorage.getInstance(iCloudContainerId);
-      await iCloudStorage.delete('test_icloud_file');
-    } catch (err) {
-      handleError(err);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -138,12 +140,8 @@ class MyApp extends StatelessWidget {
           child: Column(
             children: [
               TextButton(
-                child: Text('List File'),
-                onPressed: listFile,
-              ),
-              TextButton(
-                child: Text('Watch File'),
-                onPressed: watchFile,
+                child: Text('Gather Files'),
+                onPressed: gatherFiles,
               ),
               TextButton(
                 child: Text('Start Upload'),
@@ -154,6 +152,14 @@ class MyApp extends StatelessWidget {
                 onPressed: downloadFile,
               ),
               TextButton(
+                child: Text('Rename File'),
+                onPressed: renameFile,
+              ),
+              TextButton(
+                child: Text('Move File'),
+                onPressed: moveFile,
+              ),
+              TextButton(
                 child: Text('Delete File'),
                 onPressed: deleteFile,
               ),
@@ -162,5 +168,13 @@ class MyApp extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    filesUpdateSub?.cancel();
+    uploadProgressSub?.cancel();
+    downloadProgressSub?.cancel();
+    super.dispose();
   }
 }

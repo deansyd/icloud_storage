@@ -1,6 +1,6 @@
 name: icloud_storage
 description: A flutter plugin for uploading and downloading files to and from iCloud.
-version: 0.2.3
+version: 1.0.0
 homepage: https://github.com/deansyd/icloud_storage
 
 environment:

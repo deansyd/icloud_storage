@@ -1,3 +1,16 @@
+## 1.0.0
+
+Breaking changes
+
+- The 'destinationFileName' parameter is renamed to 'destinationRelativePath' for the 'startUpload' API, as it is now supporting subdirectory creation.
+- The 'fileName' parameter is renamed to 'relativePath' for the 'startDownload' API, as it now supporting downloading file from a subdirectory location.
+
+New API
+
+- 'gatherFiles': returns all the files' meta data and any updates can be listened to. This API is to replace 'listFiles' and 'watchFiles' which will be removed from a future release.
+- 'move': move a file from one location to another
+- 'rename': rename a file
+
 ## 0.2.3
 
 - Bug fix: delete didn't work if the file hadn't been downloaded https://github.com/deansyd/icloud_storage/issues/11

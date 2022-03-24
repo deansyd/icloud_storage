@@ -28,69 +28,79 @@ Refer to the [How to set up iCloud Container and enable the capability](#how-to-
 final iCloudStorage = await ICloudStorage.getInstance('iCloudContainerId');
 ```
 
-### List files from iCloud
+### Gather files from iCloud
 
 ```dart
-final files = await iCloudStorage.listFiles();
-files.forEach((file) => print('--- List Files --- file: $file'));
-```
-
-Note: The 'listFile' API lists files from the iCloud container directory, which also lives on the device (To understand how iCloud Storage works on iOS, please refer to [Apple Documentation - Designing for Documents in iCloud](https://developer.apple.com/library/archive/documentation/General/Conceptual/iCloudDesignGuide/Chapters/DesigningForDocumentsIniCloud.html)). In the situations where a file is just uploaded to iCloud from another device, or when the user just signed in to iCloud, the files's meta data may not be available in the iCloud container straight away. You can use the 'watchFiles' API to listen for updates.
-
-```dart
-final fileListStream = await iCloudStorage.watchFiles();
-final fileListSubscription = fileListStream.listen((files) {
-  files.forEach((file) => print('--- Watch Files --- file: $file'));
+final fileList = await iCloudStorage.gatherFiles(onUpdate: (stream) {
+  filesUpdateSub = stream.listen((updatedFileList) {
+    print('FILES UPDATED');
+    updatedFileList.forEach((file) => print('-- ${file.relativePath}'));
+  });
 });
-
-Future.delayed(Duration(seconds: 10), () {
-  fileListSubscription.cancel();
-  print('--- Watch Files --- canceled');
-});
+print('FILES GATHERED');
+fileList.forEach((file) => print('-- ${file.relativePath}'));
 ```
 
 ### Upload a file to iCloud
 
 ```dart
 await iCloudStorage.startUpload(
-  filePath: 'someDirectory/someFile',
-  destinationFileName: 'icloud_file',
+  filePath: '/localDir/localFile',
+  destinationRelativePath: 'destDir/destFile',
   onProgress: (stream) {
-    stream.listen(
-      (progress) => print('--- Upload File --- progress: $progress'),
-      onDone: () => print('--- Upload File --- done'),
-      onError: (err) => print('--- Upload File --- error: $err'),
+    uploadProgressSub = stream.listen(
+      (progress) => print('Upload File Progress: $progress'),
+      onDone: () => print('Upload File Done'),
+      onError: (err) => print('Upload File Error: $err'),
       cancelOnError: true,
     );
   },
 );
 ```
 
-Note: The 'startUpload' API is only to start the upload process. The upload may not be completed when the future completes. Use 'onProgress' to track the upload progress.
+Note: The 'startUpload' API is to start the upload process. The returned future completes without waiting for the upload to complete. Use 'onProgress' to track the upload progress. If the 'destinationRelativePath' contains a subdirectory that doesn't exist, it will be created.
 
 ### Download a file from iCloud
 
 ```dart
 await iCloudStorage.startDownload(
-  fileName: 'icloud_file',
-  destinationFilePath: 'someDirectory/someFile',
+  relativePath: 'relativePath',
+  destinationFilePath: '/localDir/localFile',
   onProgress: (stream) {
-    stream.listen(
-      (progress) => print('--- Download File --- progress: $progress'),
-      onDone: () => print('--- Download File --- done'),
-      onError: (err) => print('--- Download File --- error: $err'),
+    downloadProgressSub = stream.listen(
+      (progress) => print('Download File Progress: $progress'),
+      onDone: () => print('Download File Done'),
+      onError: (err) => print('Download File Error: $err'),
       cancelOnError: true,
     );
   },
 );
 ```
 
-Note: The 'startDownload' API is only to start the download process. The download may not be completed when the future completes. Use 'onProgress' to track the download progress.
+Note: The 'startDownload' API is to start the download process. The returned future completes without waiting for the download to complete. Use 'onProgress' to track the download progress.
 
 ### Delete a file from iCloud
 
 ```dart
-await iCloudStorage.delete('icloud_file');
+await iCloudStorage.delete('relativePath');
+```
+
+### Move a file from one location to another
+
+```dart
+await iCloudStorage.move(
+  fromRelativePath: 'dir/file',
+  toRelativePath: 'dir/subdir/file',
+);
+```
+
+### Rename a file
+
+```dart
+await iCloudStorage.rename(
+  relativePath: 'relativePath',
+  newName: 'newName',
+);
 ```
 
 ### Error handling
@@ -101,6 +111,8 @@ catch (err) {
     if (err.code == PlatformExceptionCode.iCloudConnectionOrPermission) {
       print(
           'Platform Exception: iCloud container ID is not valid, or user is not signed in for iCloud, or user denied iCloud permission for this app');
+    } else if (err.code == PlatformExceptionCode.fileNotFound) {
+      print('File not found');
     } else {
       print('Platform Exception: ${err.message}; Details: ${err.details}');
     }
@@ -109,6 +121,25 @@ catch (err) {
   }
 }
 ```
+
+## Migrating from version 0.x.x to 1.x.x
+
+- 'startUpload': rename 'destinationFileName' to 'destinationRelativePath'.
+- 'startDownload': rename 'fileName' to 'relativePath'.
+
+## FAQ
+
+Q: I uploaded a file from a device. I signed in to a simulator using the same iCloud account. But the file is not showing up in the gatherFiles result.
+
+A: From the menu 'Features' click 'Tigger iCloud Sync'.
+
+Q: I uploaded a file from device A. I signed in to device B using the same iCloud account. But the file is not showing up in the gatherFiles result.
+
+A: The API only queries files that's been synced to the iCloud container, which lives in the local device. You'll need to wait for iOS to sync the files from iCloud to the local container. There's no way to programmatically trigger iOS to Sync with iCloud.
+
+Q: I removed a file using 'delete' method then called 'gatherFiles'. The deleted file still shows up in the list.
+
+A: This is most likely to be an issue with the native code. However, if you call 'gatherFiles' first and listen the update, then do the deletion, the list is refreshed immediately in the onUpdate stream.
 
 ## How to set up iCloud Container and enable the capability
 

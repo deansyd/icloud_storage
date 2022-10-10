@@ -66,7 +66,7 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
     
     let query = NSMetadataQuery.init()
     query.operationQueue = .main
-    query.searchScopes = [NSMetadataQueryUbiquitousDataScope]
+    query.searchScopes = [NSMetadataQueryUbiquitousDataScope, NSMetadataQueryUbiquitousDocumentsScope]
     query.predicate = NSPredicate(format: "%K beginswith %@", NSMetadataItemPathKey, containerURL.path)
     addGatherFilesObservers(query: query, containerURL: containerURL, eventChannelName: eventChannelName, result: result)
     
@@ -141,7 +141,7 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
     
     let query = NSMetadataQuery.init()
     query.operationQueue = .main
-    query.searchScopes = [NSMetadataQueryUbiquitousDataScope]
+    query.searchScopes = [NSMetadataQueryUbiquitousDataScope, NSMetadataQueryUbiquitousDocumentsScope]
     query.predicate = NSPredicate(format: "%K beginswith %@", NSMetadataItemPathKey, containerURL.path)
     addListFilesObservers(query: query, containerURL: containerURL, eventChannelName: eventChannelName, result: result)
     
@@ -229,7 +229,7 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
     if !eventChannelName.isEmpty {
       let query = NSMetadataQuery.init()
       query.operationQueue = .main
-      query.searchScopes = [NSMetadataQueryUbiquitousDataScope]
+      query.searchScopes = [NSMetadataQueryUbiquitousDataScope, NSMetadataQueryUbiquitousDocumentsScope]
       query.predicate = NSPredicate(format: "%K == %@", NSMetadataItemPathKey, cloudFileURL.path)
       
       let uploadStreamHandler = self.streamHandlers[eventChannelName]!
@@ -306,7 +306,7 @@ public class SwiftIcloudStoragePlugin: NSObject, FlutterPlugin {
     
     let query = NSMetadataQuery.init()
     query.operationQueue = .main
-    query.searchScopes = [NSMetadataQueryUbiquitousDataScope]
+    query.searchScopes = [NSMetadataQueryUbiquitousDataScope, NSMetadataQueryUbiquitousDocumentsScope]
     query.predicate = NSPredicate(format: "%K == %@", NSMetadataItemPathKey, cloudFileURL.path)
     
     let downloadStreamHandler = self.streamHandlers[eventChannelName]

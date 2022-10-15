@@ -1,3 +1,20 @@
+## 2.0.0
+
+What's New
+
+- Support for macOS
+- Support for multiple iCloud Containers
+
+Breaking changes
+
+- All methods have been changed to static methods.
+- `getInstance` has been removed. You need to specifiy the `iCloudContainerId` in each method.
+- `gatherFiles` has been renamed to `gather`.
+- `startUpload` has been renamed to `upload`.
+- `startDownload` has been renamed to `download`.
+- `listFiles` and `watchFiles` have been removed.
+- `DownloadStatus` enum members haved been changed to camel case from pascal case.
+
 ## 1.0.0
 
 Breaking changes

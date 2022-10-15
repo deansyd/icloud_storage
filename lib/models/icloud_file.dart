@@ -44,11 +44,11 @@ class ICloudFile {
   static DownloadStatus _mapToDownloadStatusFromNSKeys(String key) {
     switch (key) {
       case 'NSMetadataUbiquitousItemDownloadingStatusNotDownloaded':
-        return DownloadStatus.NotDownloaded;
+        return DownloadStatus.notDownloaded;
       case 'NSMetadataUbiquitousItemDownloadingStatusDownloaded':
-        return DownloadStatus.Downloaded;
+        return DownloadStatus.downloaded;
       case 'NSMetadataUbiquitousItemDownloadingStatusCurrent':
-        return DownloadStatus.Current;
+        return DownloadStatus.current;
       default:
         throw 'NSMetadataUbiquitousItemDownloadingStatusKey is not handled';
     }
@@ -59,15 +59,15 @@ class ICloudFile {
 enum DownloadStatus {
   /// Corresponding to NSMetadataUbiquitousItemDownloadingStatusNotDownloaded
   /// This item has not been downloaded yet.
-  NotDownloaded,
+  notDownloaded,
 
   /// Corresponding to NSMetadataUbiquitousItemDownloadingStatusDownloaded
   /// There is a local version of this item available.
   /// The most current version will get downloaded as soon as possible.
-  Downloaded,
+  downloaded,
 
   /// Corresponding to NSMetadataUbiquitousItemDownloadingStatusCurrent
   /// There is a local version of this item and it is the most up-to-date
   /// version known to this device.
-  Current,
+  current,
 }

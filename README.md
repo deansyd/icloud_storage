@@ -3,7 +3,7 @@
 [![Pub](https://img.shields.io/pub/v/icloud_storage.svg)](https://pub.dev/packages/icloud_storage)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?hosted_button_id=BH6WBSGWN594U)
 
-A flutter plugin for uploading and downloading files to and from iCloud.
+A flutter plugin for upload, download and manage files in the app's iCloud container.
 
 ## Introduction
 
@@ -22,16 +22,10 @@ Refer to the [How to set up iCloud Container and enable the capability](#how-to-
 
 ## API Usage
 
-### Get instance
-
-```dart
-final iCloudStorage = await ICloudStorage.getInstance('iCloudContainerId');
-```
-
 ### Gather files from iCloud
 
 ```dart
-final fileList = await iCloudStorage.gatherFiles(onUpdate: (stream) {
+final fileList = await ICloudStorage.gather(onUpdate: (stream) {
   filesUpdateSub = stream.listen((updatedFileList) {
     print('FILES UPDATED');
     updatedFileList.forEach((file) => print('-- ${file.relativePath}'));
@@ -44,7 +38,7 @@ fileList.forEach((file) => print('-- ${file.relativePath}'));
 ### Upload a file to iCloud
 
 ```dart
-await iCloudStorage.startUpload(
+await ICloudStorage.upload(
   filePath: '/localDir/localFile',
   destinationRelativePath: 'destDir/destFile',
   onProgress: (stream) {
@@ -63,7 +57,7 @@ Note: The 'startUpload' API is to start the upload process. The returned future 
 ### Download a file from iCloud
 
 ```dart
-await iCloudStorage.startDownload(
+await ICloudStorage.download(
   relativePath: 'relativePath',
   destinationFilePath: '/localDir/localFile',
   onProgress: (stream) {
@@ -82,13 +76,13 @@ Note: The 'startDownload' API is to start the download process. The returned fut
 ### Delete a file from iCloud
 
 ```dart
-await iCloudStorage.delete('relativePath');
+await ICloudStorage.delete('relativePath');
 ```
 
 ### Move a file from one location to another
 
 ```dart
-await iCloudStorage.move(
+await ICloudStorage.move(
   fromRelativePath: 'dir/file',
   toRelativePath: 'dir/subdir/file',
 );
@@ -97,7 +91,7 @@ await iCloudStorage.move(
 ### Rename a file
 
 ```dart
-await iCloudStorage.rename(
+await ICloudStorage.rename(
   relativePath: 'relativePath',
   newName: 'newName',
 );
@@ -122,10 +116,17 @@ catch (err) {
 }
 ```
 
-## Migrating from version 0.x.x to 1.x.x
+## Support for macOS
 
-- 'startUpload': rename 'destinationFileName' to 'destinationRelativePath'.
-- 'startDownload': rename 'fileName' to 'relativePath'.
+When uploading and downloading files, make sure the File Access is enabled for the local files if App Sandbox is enabled. Access are enabled for the files in the app's container (/Users/{username}/Library/Containers/{bundle_identifier}). Files in other locations can be enabled from XCode.
+
+## Migrating from version 1.x.x to 2.0.0
+
+- Version 2 supports operations on multiple containers. Therefore, `ICloudStorage.getInstance('iCloudContainerId')` is no longer needed. Instead, you'll need to specifiy the iCloudContainerId in each method.
+- All methods in version 2 have been changed to static methods.
+- `gatherFiles` has been renamed to `gather`.
+- `startUpload` has been renamed to `upload`.
+- `startDownload` has been renamed to `download`.
 
 ## FAQ
 

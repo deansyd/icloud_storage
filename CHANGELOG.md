@@ -1,3 +1,7 @@
+## 2.1.0
+
+- Add support for managing files in the iCloud container's `Documents` subdirectory.
+
 ## 2.0.0
 
 What's New

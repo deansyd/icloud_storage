@@ -25,12 +25,15 @@ Refer to the [How to set up iCloud Container and enable the capability](#how-to-
 ### Gather files from iCloud
 
 ```dart
-final fileList = await ICloudStorage.gather(onUpdate: (stream) {
-  filesUpdateSub = stream.listen((updatedFileList) {
-    print('FILES UPDATED');
-    updatedFileList.forEach((file) => print('-- ${file.relativePath}'));
-  });
-});
+final fileList = await ICloudStorage.gather(
+  containerId: 'iCloudContainerId',
+  onUpdate: (stream) {
+    filesUpdateSub = stream.listen((updatedFileList) {
+      print('FILES UPDATED');
+      updatedFileList.forEach((file) => print('-- ${file.relativePath}'));
+    });
+  },
+);
 print('FILES GATHERED');
 fileList.forEach((file) => print('-- ${file.relativePath}'));
 ```
@@ -39,6 +42,7 @@ fileList.forEach((file) => print('-- ${file.relativePath}'));
 
 ```dart
 await ICloudStorage.upload(
+  containerId: 'iCloudContainerId',
   filePath: '/localDir/localFile',
   destinationRelativePath: 'destDir/destFile',
   onProgress: (stream) {
@@ -58,6 +62,7 @@ Note: The 'startUpload' API is to start the upload process. The returned future 
 
 ```dart
 await ICloudStorage.download(
+  containerId: 'iCloudContainerId',
   relativePath: 'relativePath',
   destinationFilePath: '/localDir/localFile',
   onProgress: (stream) {
@@ -76,13 +81,17 @@ Note: The 'startDownload' API is to start the download process. The returned fut
 ### Delete a file from iCloud
 
 ```dart
-await ICloudStorage.delete('relativePath');
+await ICloudStorage.delete(
+  containerId: 'iCloudContainerId',
+  relativePath: 'relativePath'
+);
 ```
 
 ### Move a file from one location to another
 
 ```dart
 await ICloudStorage.move(
+  containerId: 'iCloudContainerId',
   fromRelativePath: 'dir/file',
   toRelativePath: 'dir/subdir/file',
 );
@@ -92,6 +101,7 @@ await ICloudStorage.move(
 
 ```dart
 await ICloudStorage.rename(
+  containerId: 'iCloudContainerId',
   relativePath: 'relativePath',
   newName: 'newName',
 );

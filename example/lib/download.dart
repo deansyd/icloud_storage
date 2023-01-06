@@ -40,7 +40,7 @@ class _DownloadState extends State<Download> {
               _progress = 'Download Completed';
             }),
             onError: (err) => setState(() {
-              _error = err;
+              _error = getErrorMessage(err);
               _progress = '';
             }),
             cancelOnError: true,

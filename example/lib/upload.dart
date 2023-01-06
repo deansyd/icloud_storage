@@ -42,7 +42,7 @@ class _UploadState extends State<Upload> {
             }),
             onError: (err) => setState(() {
               _progress = null;
-              _error = err;
+              _error = getErrorMessage(err);
             }),
             cancelOnError: true,
           );

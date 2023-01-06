@@ -180,7 +180,7 @@ public class IcloudStoragePlugin: NSObject, FlutterPlugin {
     
     guard let fileItem = query.results.first as? NSMetadataItem else { return }
     guard let fileURL = fileItem.value(forAttribute: NSMetadataItemURLKey) as? URL else { return }
-    guard let fileURLValues = try? fileURL.resourceValues(forKeys: [.ubiquitousItemIsUploadingKey]) else { return}
+    guard let fileURLValues = try? fileURL.resourceValues(forKeys: [.ubiquitousItemUploadingErrorKey]) else { return}
     guard let streamHandler = self.streamHandlers[eventChannelName] else { return }
     
     if let error = fileURLValues.ubiquitousItemUploadingError {
@@ -258,7 +258,7 @@ public class IcloudStoragePlugin: NSObject, FlutterPlugin {
     
     guard let fileItem = query.results.first as? NSMetadataItem else { return }
     guard let fileURL = fileItem.value(forAttribute: NSMetadataItemURLKey) as? URL else { return }
-    guard let fileURLValues = try? fileURL.resourceValues(forKeys: [.ubiquitousItemIsDownloadingKey, .ubiquitousItemDownloadingStatusKey]) else { return }
+    guard let fileURLValues = try? fileURL.resourceValues(forKeys: [.ubiquitousItemDownloadingErrorKey, .ubiquitousItemDownloadingStatusKey]) else { return }
     let streamHandler = self.streamHandlers[eventChannelName]
     
     if let error = fileURLValues.ubiquitousItemDownloadingError {
@@ -389,7 +389,7 @@ public class IcloudStoragePlugin: NSObject, FlutterPlugin {
   }
   
   let argumentError = FlutterError(code: "E_ARG", message: "Invalid Arguments", details: nil)
-  let containerError = FlutterError(code: "E_CTR", message: "Invalid containerId, or user is not signed in, or user disabled iCould permission", details: nil)
+  let containerError = FlutterError(code: "E_CTR", message: "Invalid containerId, or user is not signed in, or user disabled iCloud permission", details: nil)
   let fileNotFoundError = FlutterError(code: "E_FNF", message: "The file does not exist", details: nil)
   
   private func nativeCodeError(_ error: Error) -> FlutterError {

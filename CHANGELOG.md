@@ -1,3 +1,7 @@
+## 2.2.0
+
+- Bug fix: upload and download errors were not passed from the platform code.
+
 ## 2.1.0
 
 - Add support for managing files in the iCloud container's `Documents` subdirectory.

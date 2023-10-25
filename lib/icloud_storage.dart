@@ -50,13 +50,13 @@ class ICloudStorage {
     StreamHandler<double>? onProgress,
   }) async {
     if (filePath.trim().isEmpty) {
-      throw InvalidArgumentException('invalid filePath');
+      throw InvalidArgumentException('invalid filePath: $filePath');
     }
 
     final destination = destinationRelativePath ?? filePath.split('/').last;
 
     if (!_validateRelativePath(destination)) {
-      throw InvalidArgumentException('invalid destination relative path');
+      throw InvalidArgumentException('invalid destination relative path: $destination');
     }
 
     await ICloudStoragePlatform.instance.upload(
@@ -90,11 +90,11 @@ class ICloudStorage {
     StreamHandler<double>? onProgress,
   }) async {
     if (!_validateRelativePath(relativePath)) {
-      throw InvalidArgumentException('invalid relativePath');
+      throw InvalidArgumentException('invalid relativePath: $relativePath');
     }
     if (destinationFilePath.trim().isEmpty ||
         destinationFilePath[destinationFilePath.length - 1] == '/') {
-      throw InvalidArgumentException('invalid destinationFilePath');
+      throw InvalidArgumentException('invalid destinationFilePath: $destinationFilePath');
     }
 
     await ICloudStoragePlatform.instance.download(
@@ -120,7 +120,7 @@ class ICloudStorage {
     required String relativePath,
   }) async {
     if (!_validateRelativePath(relativePath)) {
-      throw InvalidArgumentException('invalid relativePath');
+      throw InvalidArgumentException('invalid relativePath: $relativePath');
     }
 
     await ICloudStoragePlatform.instance.delete(
@@ -145,9 +145,12 @@ class ICloudStorage {
     required String fromRelativePath,
     required String toRelativePath,
   }) async {
-    if (!_validateRelativePath(fromRelativePath) ||
-        !_validateRelativePath(toRelativePath)) {
-      throw InvalidArgumentException('invalid relativePath');
+    if (!_validateRelativePath(fromRelativePath)) {
+      throw InvalidArgumentException('invalid relativePath: (from) $fromRelativePath');
+    }
+          
+    if(!_validateRelativePath(toRelativePath)) {
+      throw InvalidArgumentException('invalid relativePath: (to) $toRelativePath');
     }
 
     await ICloudStoragePlatform.instance.move(
@@ -175,11 +178,11 @@ class ICloudStorage {
     required String newName,
   }) async {
     if (!_validateRelativePath(relativePath)) {
-      throw InvalidArgumentException('invalid relativePath');
+      throw InvalidArgumentException('invalid relativePath: $relativePath');
     }
 
     if (!_validateFileName(newName)) {
-      throw InvalidArgumentException('invalid newName');
+      throw InvalidArgumentException('invalid newName: $newName');
     }
 
     await move(

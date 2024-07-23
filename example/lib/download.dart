@@ -15,7 +15,6 @@ class Download extends StatefulWidget {
 class _DownloadState extends State<Download> {
   final _containerIdController = TextEditingController();
   final _filePathController = TextEditingController();
-  final _destPathController = TextEditingController();
   StreamSubscription<double>? _progressListner;
   String? _error;
   String? _progress;
@@ -30,7 +29,6 @@ class _DownloadState extends State<Download> {
       await ICloudStorage.download(
         containerId: _containerIdController.text,
         relativePath: _filePathController.text,
-        destinationFilePath: _destPathController.text,
         onProgress: (stream) {
           _progressListner = stream.listen(
             (progress) => setState(() {
@@ -66,7 +64,6 @@ class _DownloadState extends State<Download> {
     _progressListner?.cancel();
     _containerIdController.dispose();
     _filePathController.dispose();
-    _destPathController.dispose();
     super.dispose();
   }
 
@@ -91,12 +88,6 @@ class _DownloadState extends State<Download> {
                 controller: _filePathController,
                 decoration: const InputDecoration(
                   labelText: 'relativePath',
-                ),
-              ),
-              TextField(
-                controller: _destPathController,
-                decoration: const InputDecoration(
-                  labelText: 'destinationFilePath',
                 ),
               ),
               const SizedBox(height: 16),

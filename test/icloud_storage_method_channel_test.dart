@@ -30,6 +30,8 @@ void main() {
               'hasUnresolvedConflicts': false,
             }
           ];
+        case 'download':
+          return true;
         default:
           return null;
       }
@@ -97,23 +99,20 @@ void main() {
 
   group('download tests:', () {
     test('download', () async {
-      await platform.download(
+      final result = await platform.download(
         containerId: containerId,
         relativePath: 'file',
-        destinationFilePath: '/dir/dest',
       );
       expect((mockMethodCall.arguments['containerId'] as String), containerId);
-      expect(
-          (mockMethodCall.arguments['localFilePath'] as String), '/dir/dest');
       expect((mockMethodCall.arguments['cloudFileName'] as String), 'file');
       expect((mockMethodCall.arguments['eventChannelName'] as String), '');
+      expect(result, true);
     });
 
-    test('upload with onProgress', () async {
+    test('download with onProgress', () async {
       await platform.download(
         containerId: containerId,
         relativePath: 'file',
-        destinationFilePath: '/dir/dest',
         onProgress: (stream) => {},
       );
       expect(

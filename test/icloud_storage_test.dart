@@ -17,6 +17,11 @@ class MockIcloudStoragePlatform
   String get uploadDestinationRelativePath => _uploadDestinationRelativePath;
 
   @override
+  Future<String> getContainerPath({required String containerId}) async {
+    return '';
+  }
+
+  @override
   Future<List<ICloudFile>> gather({
     required String containerId,
     StreamHandler<List<ICloudFile>>? onUpdate,
@@ -35,12 +40,12 @@ class MockIcloudStoragePlatform
   }
 
   @override
-  Future<void> download(
+  Future<bool> download(
       {required String containerId,
       required String relativePath,
-      required String destinationFilePath,
       StreamHandler<double>? onProgress}) async {
     _calls.add('download');
+    return true;
   }
 
   @override
@@ -137,7 +142,6 @@ void main() {
         await ICloudStorage.download(
           containerId: containerId,
           relativePath: 'file',
-          destinationFilePath: '/dir/file',
         );
         expect(fakePlatform.calls.last, 'download');
       });
@@ -147,29 +151,6 @@ void main() {
           () async => await ICloudStorage.download(
             containerId: containerId,
             relativePath: 'file/',
-            destinationFilePath: 'dir/file',
-          ),
-          throwsException,
-        );
-      });
-
-      test('download with empty destinationFilePath', () async {
-        expect(
-          () async => await ICloudStorage.download(
-            containerId: containerId,
-            relativePath: 'file',
-            destinationFilePath: '',
-          ),
-          throwsException,
-        );
-      });
-
-      test('download with invalid destinationFilePath', () async {
-        expect(
-          () async => await ICloudStorage.download(
-            containerId: containerId,
-            relativePath: 'file',
-            destinationFilePath: 'dir/file/',
           ),
           throwsException,
         );

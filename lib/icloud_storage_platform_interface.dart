@@ -42,6 +42,13 @@ abstract class ICloudStoragePlatform extends PlatformInterface {
     throw UnimplementedError('gather() has not been implemented.');
   }
 
+
+  Future<String?> getContainerPath({
+    required String containerId,
+  }) async {
+    throw UnimplementedError('getContainerPath() has not been implemented.');
+  }
+
   /// Upload a local file to iCloud.
   ///
   /// [containerId] is the iCloud Container Id.
@@ -81,10 +88,9 @@ abstract class ICloudStoragePlatform extends PlatformInterface {
   ///
   /// The returned future completes without waiting for the file to be
   /// downloaded.
-  Future<void> download({
+  Future<bool> download({
     required String containerId,
     required String relativePath,
-    required String destinationFilePath,
     StreamHandler<double>? onProgress,
   }) async {
     throw UnimplementedError('download() has not been implemented.');

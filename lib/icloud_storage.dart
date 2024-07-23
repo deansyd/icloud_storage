@@ -27,6 +27,16 @@ class ICloudStorage {
     );
   }
 
+  static Future<String?> getContainerPath({
+    required String containerId,
+  }) async {
+    return await ICloudStoragePlatform.instance.getContainerPath(
+      containerId: containerId,
+    );
+  }
+
+  
+
   /// Initiate to upload a file to iCloud
   ///
   /// [containerId] is the iCloud Container Id.
@@ -83,24 +93,18 @@ class ICloudStorage {
   ///
   /// The returned future completes without waiting for the file to be
   /// downloaded
-  static Future<void> download({
+  static Future<bool> download({
     required String containerId,
     required String relativePath,
-    required String destinationFilePath,
     StreamHandler<double>? onProgress,
   }) async {
     if (!_validateRelativePath(relativePath)) {
       throw InvalidArgumentException('invalid relativePath');
     }
-    if (destinationFilePath.trim().isEmpty ||
-        destinationFilePath[destinationFilePath.length - 1] == '/') {
-      throw InvalidArgumentException('invalid destinationFilePath');
-    }
 
-    await ICloudStoragePlatform.instance.download(
+    return await ICloudStoragePlatform.instance.download(
       containerId: containerId,
       relativePath: relativePath,
-      destinationFilePath: destinationFilePath,
       onProgress: onProgress,
     );
   }

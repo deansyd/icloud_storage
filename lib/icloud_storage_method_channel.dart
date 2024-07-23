@@ -43,6 +43,15 @@ class MethodChannelICloudStorage extends ICloudStoragePlatform {
   }
 
   @override
+  Future<String?> getContainerPath({required String containerId}) async {
+    final result = await methodChannel.invokeMethod<String>(
+      'getContainerPath',
+      {'containerId': containerId},
+    );
+    return result;
+  }
+
+  @override
   Future<void> upload({
     required String containerId,
     required String filePath,
@@ -75,10 +84,9 @@ class MethodChannelICloudStorage extends ICloudStoragePlatform {
   }
 
   @override
-  Future<void> download({
+  Future<bool> download({
     required String containerId,
     required String relativePath,
-    required String destinationFilePath,
     StreamHandler<double>? onProgress,
   }) async {
     var eventChannelName = '';
@@ -98,10 +106,9 @@ class MethodChannelICloudStorage extends ICloudStoragePlatform {
       onProgress(stream);
     }
 
-    await methodChannel.invokeMethod('download', {
+    return await methodChannel.invokeMethod('download', {
       'containerId': containerId,
       'cloudFileName': relativePath,
-      'localFilePath': destinationFilePath,
       'eventChannelName': eventChannelName
     });
   }

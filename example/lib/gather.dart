@@ -11,10 +11,10 @@ class Gather extends StatefulWidget {
 }
 
 class _GatherState extends State<Gather> {
-  final _containerIdController = TextEditingController();
+  final _containerIdController = TextEditingController(text: "iCloud.test");
   StreamSubscription<List<ICloudFile>>? _updateListner;
 
-  List<String> _files = [];
+  List<ICloudFile> _files = [];
   String? _error;
   String _status = '';
 
@@ -29,7 +29,7 @@ class _GatherState extends State<Gather> {
         onUpdate: (stream) {
           _updateListner = stream.listen((updatedFileList) {
             setState(() {
-              _files = updatedFileList.map((e) => e.relativePath).toList();
+              _files = updatedFileList;
             });
           });
         },
@@ -38,7 +38,7 @@ class _GatherState extends State<Gather> {
       setState(() {
         _status = 'listening';
         _error = null;
-        _files = results.map((e) => e.relativePath).toList();
+        _files = results;
       });
     } catch (ex) {
       setState(() {
@@ -137,9 +137,9 @@ class _GatherState extends State<Gather> {
                         ),
                       ),
                     for (final file in _files)
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SelectableText(file),
+                      ListTile(
+                        title: Text(file.relativePath),
+                        subtitle: Text("Changed: ${file.contentChangeDate}"),
                       ),
                   ],
                 ),

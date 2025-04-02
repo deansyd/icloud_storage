@@ -152,6 +152,14 @@ Q: I removed a file using 'delete' method then called 'gatherFiles'. The deleted
 
 A: This is most likely to be an issue with the native code. However, if you call 'gatherFiles' first and listen the update, then do the deletion, the list is refreshed immediately in the onUpdate stream.
 
+Q: `ICloudFile.contentChangeDate` isn't changing when I reupload the same file
+
+A: It won't as it just returns the change date from file metadata
+
+Q: My files aren't showing up in iCloud
+
+A: Because it simply won't. It's a container, isolated from everything else, and can only be accessed by your app.
+
 ## How to set up iCloud Container and enable the capability
 
 1. Log in to your apple developer account and select 'Certificates, IDs & Profiles' from the left navigation.

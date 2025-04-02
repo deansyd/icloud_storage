@@ -13,7 +13,7 @@ class Rename extends StatefulWidget {
 }
 
 class _RenameState extends State<Rename> {
-  final _containerIdController = TextEditingController();
+  final _containerIdController = TextEditingController(text: "iCloud.test");
   final _relativePathController = TextEditingController();
   final _newNameController = TextEditingController();
   String? _error;

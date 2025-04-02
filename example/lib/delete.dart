@@ -13,7 +13,7 @@ class Delete extends StatefulWidget {
 }
 
 class _DeleteState extends State<Delete> {
-  final _containerIdController = TextEditingController();
+  final _containerIdController = TextEditingController(text: "iCloud.test");
   final _relativePathController = TextEditingController();
   String? _error;
   String? _progress;

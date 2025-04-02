@@ -13,7 +13,7 @@ class Move extends StatefulWidget {
 }
 
 class _MoveState extends State<Move> {
-  final _containerIdController = TextEditingController();
+  final _containerIdController = TextEditingController(text: "iCloud.test");
   final _fromPathController = TextEditingController();
   final _toPathController = TextEditingController();
   String? _error;

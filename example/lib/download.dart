@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:icloud_storage/icloud_storage.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'utils.dart';
 
 class Download extends StatefulWidget {
@@ -13,7 +15,7 @@ class Download extends StatefulWidget {
 }
 
 class _DownloadState extends State<Download> {
-  final _containerIdController = TextEditingController();
+  final _containerIdController = TextEditingController(text: "iCloud.test");
   final _filePathController = TextEditingController();
   final _destPathController = TextEditingController();
   StreamSubscription<double>? _progressListner;
@@ -30,7 +32,11 @@ class _DownloadState extends State<Download> {
       await ICloudStorage.download(
         containerId: _containerIdController.text,
         relativePath: _filePathController.text,
-        destinationFilePath: _destPathController.text,
+        destinationFilePath: path.join(
+          await getApplicationSupportDirectory().then((v) => v.path),
+          "downloaded/",
+          _destPathController.text,
+        ),
         onProgress: (stream) {
           _progressListner = stream.listen(
             (progress) => setState(() {
@@ -97,6 +103,7 @@ class _DownloadState extends State<Download> {
                 controller: _destPathController,
                 decoration: const InputDecoration(
                   labelText: 'destinationFilePath',
+                  prefixText: "downloaded/",
                 ),
               ),
               const SizedBox(height: 16),
